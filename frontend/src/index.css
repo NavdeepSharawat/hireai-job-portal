@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+
+@layer base {
+  :root {
+    --color-primary: #6366f1;
+    --color-primary-dark: #4f46e5;
+    --color-accent: #f97316;
+    --color-bg: #09090b;
+    --color-surface: #18181b;
+    --color-surface-2: #27272a;
+    --color-border: #3f3f46;
+    --color-text: #fafafa;
+    --color-text-muted: #a1a1aa;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: rgba(99, 102, 241, 0.3);
+    color: #fff;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-bg);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #6366f1;
+  }
+}
+
+@layer components {
+  /* Button Styles */
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-500 text-white font-semibold px-6 py-3 rounded-xl
+           transition-all duration-200 shadow-glow hover:shadow-glow-lg 
+           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-surface-800 hover:bg-surface-200/10 text-white border border-surface-200/20
+           font-semibold px-6 py-3 rounded-xl transition-all duration-200 active:scale-95;
+  }
+
+  .btn-outline {
+    @apply border border-primary-500 text-primary-400 hover:bg-primary-500/10 
+           font-semibold px-6 py-3 rounded-xl transition-all duration-200;
+  }
+
+  /* Card Styles */
+  .card {
+    @apply bg-surface-900 border border-surface-200/10 rounded-2xl p-6
+           transition-all duration-300;
+  }
+
+  .card-hover {
+    @apply hover:border-primary-500/40 hover:shadow-card-hover hover:-translate-y-1;
+  }
+
+  /* Input Styles */
+  .input {
+    @apply w-full bg-surface-800 border border-surface-200/20 rounded-xl px-4 py-3
+           text-white placeholder-zinc-500 focus:outline-none focus:ring-2 
+           focus:ring-primary-500/50 focus:border-primary-500 transition-all duration-200;
+  }
+
+  /* Badge Styles */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .badge-primary {
+    @apply badge bg-primary-500/20 text-primary-300 border border-primary-500/30;
+  }
+
+  .badge-green {
+    @apply badge bg-emerald-500/20 text-emerald-300 border border-emerald-500/30;
+  }
+
+  .badge-orange {
+    @apply badge bg-orange-500/20 text-orange-300 border border-orange-500/30;
+  }
+
+  .badge-red {
+    @apply badge bg-red-500/20 text-red-300 border border-red-500/30;
+  }
+
+  .badge-yellow {
+    @apply badge bg-yellow-500/20 text-yellow-300 border border-yellow-500/30;
+  }
+
+  /* Glassmorphism */
+  .glass {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary-400 via-purple-400 to-accent-400 bg-clip-text text-transparent;
+  }
+
+  /* Skeleton loader */
+  .skeleton {
+    @apply bg-surface-800 rounded animate-pulse;
+    background: linear-gradient(
+      90deg,
+      #27272a 25%,
+      #3f3f46 50%,
+      #27272a 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* Noise texture overlay */
+  .noise::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    border-radius: inherit;
+  }
+}
+
+/* Mesh gradient backgrounds */
+.mesh-gradient {
+  background: 
+    radial-gradient(ellipse 80% 80% at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 60% at 80% 80%, rgba(249, 115, 22, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+    #09090b;
+}
+
+/* Page transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms ease, transform 300ms ease;
+}

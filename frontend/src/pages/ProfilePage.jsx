@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { User, Building2, Save, Loader2, Plus, X, Lock, Eye, EyeOff, Link as LinkIcon } from "lucide-react";
 import useAuthStore from "../context/authStore";
 import { authAPI } from "../utils/api";
+import axios from "axios";
 import toast from "react-hot-toast";
 
 export default function ProfilePage() {
@@ -10,6 +11,8 @@ export default function ProfilePage() {
   const [tab, setTab] = useState("profile");
   const [saving, setSaving] = useState(false);
   const [skillInput, setSkillInput] = useState("");
+  const [uploadingResume, setUploadingResume] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const [profileForm, setProfileForm] = useState({
     name: user?.name || "",
@@ -19,6 +22,7 @@ export default function ProfilePage() {
       experience: user?.profile?.experience || "",
       location: user?.profile?.location || "",
       resume: user?.profile?.resume || "",
+      avatar: user?.profile?.avatar || "",
       linkedin: user?.profile?.linkedin || "",
       github: user?.profile?.github || "",
       portfolio: user?.profile?.portfolio || "",
@@ -35,6 +39,48 @@ export default function ProfilePage() {
 
   const [passForm, setPassForm] = useState({ currentPassword: "", newPassword: "", confirm: "" });
   const [showPass, setShowPass] = useState({ current: false, new: false });
+
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingResume(true);
+    try {
+      const formData = new FormData();
+      formData.append("resume", file);
+      const token = localStorage.getItem("hireai_token");
+      const res = await axios.post(
+        "https://hireai-backend-seuo.onrender.com/api/upload/resume",
+        formData,
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" } }
+      );
+      setProfileForm((f) => ({ ...f, profile: { ...f.profile, resume: res.data.url } }));
+      toast.success("Resume uploaded! ✅");
+    } catch (err) {
+      toast.error("Upload failed");
+    }
+    setUploadingResume(false);
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file);
+      const token = localStorage.getItem("hireai_token");
+      const res = await axios.post(
+        "https://hireai-backend-seuo.onrender.com/api/upload/avatar",
+        formData,
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" } }
+      );
+      setProfileForm((f) => ({ ...f, profile: { ...f.profile, avatar: res.data.url } }));
+      toast.success("Profile picture uploaded! ✅");
+    } catch (err) {
+      toast.error("Upload failed");
+    }
+    setUploadingAvatar(false);
+  };
 
   const addSkill = () => {
     const v = skillInput.trim();
@@ -69,9 +115,11 @@ export default function ProfilePage() {
     setSaving(false);
   };
 
-  const TABS = [{ id: "profile", label: user?.role === "recruiter" ? "Company" : "Profile", icon: user?.role === "recruiter" ? Building2 : User }, { id: "security", label: "Security", icon: Lock }];
+  const TABS = [
+    { id: "profile", label: user?.role === "recruiter" ? "Company" : "Profile", icon: user?.role === "recruiter" ? Building2 : User },
+    { id: "security", label: "Security", icon: Lock }
+  ];
 
-  // Profile completion
   const profileComplete = (() => {
     if (user?.role === "recruiter") return 100;
     const p = profileForm.profile;
@@ -94,8 +142,11 @@ export default function ProfilePage() {
 
         {/* User Card */}
         <div className="card mb-6 flex items-center gap-5">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center text-2xl font-bold text-white shadow-glow shrink-0">
-            {user?.name?.[0]?.toUpperCase()}
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center text-2xl font-bold text-white shadow-glow shrink-0 overflow-hidden">
+            {profileForm.profile.avatar
+              ? <img src={profileForm.profile.avatar} alt="avatar" className="w-full h-full object-cover" />
+              : user?.name?.[0]?.toUpperCase()
+            }
           </div>
           <div className="flex-1">
             <div className="font-bold text-white text-lg">{user?.name}</div>
@@ -175,11 +226,39 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Links */}
+                  {/* Links & Resume */}
                   <div className="space-y-3">
                     <h3 className="text-sm font-semibold text-zinc-300 flex items-center gap-2"><LinkIcon size={14} /> Links & Resume</h3>
+
+                    {/* Resume Upload */}
+                    <div className="p-3 rounded-xl bg-surface-800/50 border border-white/5">
+                      <p className="text-xs text-zinc-400 mb-2">Upload Resume (PDF, DOC — max 5MB)</p>
+                      <div className="flex items-center gap-3">
+                        <label className="btn-primary text-xs py-2 px-4 cursor-pointer flex items-center gap-2">
+                          {uploadingResume ? <><Loader2 size={12} className="animate-spin" /> Uploading...</> : "📄 Upload Resume"}
+                          <input type="file" accept=".pdf,.doc,.docx" onChange={handleResumeUpload} className="hidden" disabled={uploadingResume} />
+                        </label>
+                        {profileForm.profile.resume && (
+                          <a href={profileForm.profile.resume} target="_blank" rel="noreferrer" className="text-xs text-primary-400 hover:underline">View Current Resume</a>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Avatar Upload */}
+                    <div className="p-3 rounded-xl bg-surface-800/50 border border-white/5">
+                      <p className="text-xs text-zinc-400 mb-2">Profile Picture (JPG, PNG — max 2MB)</p>
+                      <div className="flex items-center gap-3">
+                        {profileForm.profile.avatar && (
+                          <img src={profileForm.profile.avatar} alt="avatar" className="w-10 h-10 rounded-xl object-cover" />
+                        )}
+                        <label className="btn-secondary text-xs py-2 px-4 cursor-pointer flex items-center gap-2">
+                          {uploadingAvatar ? <><Loader2 size={12} className="animate-spin" /> Uploading...</> : "🖼️ Upload Photo"}
+                          <input type="file" accept=".jpg,.jpeg,.png,.webp" onChange={handleAvatarUpload} className="hidden" disabled={uploadingAvatar} />
+                        </label>
+                      </div>
+                    </div>
+
                     {[
-                      { label: "Resume URL", key: "resume", placeholder: "https://drive.google.com/..." },
                       { label: "LinkedIn", key: "linkedin", placeholder: "https://linkedin.com/in/..." },
                       { label: "GitHub", key: "github", placeholder: "https://github.com/..." },
                       { label: "Portfolio", key: "portfolio", placeholder: "https://myportfolio.com" },
@@ -192,7 +271,6 @@ export default function ProfilePage() {
                   </div>
                 </>
               ) : (
-                /* Recruiter company fields */
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>

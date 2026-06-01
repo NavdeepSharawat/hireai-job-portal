@@ -51,8 +51,9 @@ if (process.env.NODE_ENV === "development") {
 
 // =============================================
 // API ROUTES
-// =============================================
+// =======app.use("/api/auth", require("./routes/auth"));======================================
 app.use("/api/auth", require("./routes/auth"));
+app.use("/api/upload", require("./routes/upload"));
 app.use("/api/jobs", require("./routes/jobs"));
 app.use("/api/applications", require("./routes/applications"));
 

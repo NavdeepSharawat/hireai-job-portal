@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Briefcase, Plus, X, Loader2, Save, ChevronRight } from "lucide-react";
+import { Plus, X, Loader2, Save, ChevronRight } from "lucide-react";
 import { jobsAPI } from "../utils/api";
 import useAuthStore from "../context/authStore";
 import toast from "react-hot-toast";
@@ -15,6 +15,47 @@ const INITIAL = {
   salary: { min: "", max: "", currency: "INR", isVisible: true },
   applicationDeadline: "", status: "active",
   companyName: "", companyLogo: "",
+};
+
+// TagInput is OUTSIDE PostJobPage to prevent focus loss
+const TagInput = ({ label, field, value, setValue, form, setForm, placeholder }) => {
+  const addTag = () => {
+    const v = value.trim();
+    if (!v || form[field].includes(v)) { setValue(""); return; }
+    setForm((f) => ({ ...f, [field]: [...f[field], v] }));
+    setValue("");
+  };
+
+  const removeTag = (index) => {
+    setForm((f) => ({ ...f, [field]: f[field].filter((_, i) => i !== index) }));
+  };
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-zinc-300 mb-2">{label}</label>
+      <div className="flex gap-2 mb-2">
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
+          placeholder={placeholder}
+          className="input text-sm flex-1"
+        />
+        <button type="button" onClick={addTag} className="btn-secondary text-sm px-3 py-2">
+          <Plus size={15} />
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {form[field].map((item, i) => (
+          <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary-500/10 border border-primary-500/30 text-primary-400 text-sm">
+            {item}
+            <button onClick={() => removeTag(i)} type="button"><X size={11} /></button>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export default function PostJobPage() {
@@ -57,15 +98,6 @@ export default function PostJobPage() {
     }
   }, [id]);
 
-  const addTag = (field, value, setter) => {
-    const v = value.trim();
-    if (!v || form[field].includes(v)) { setter(""); return; }
-    setForm((f) => ({ ...f, [field]: [...f[field], v] }));
-    setter("");
-  };
-
-  const removeTag = (field, index) => setForm((f) => ({ ...f, [field]: f[field].filter((_, i) => i !== index) }));
-
   const handleSubmit = async () => {
     if (!form.title || !form.description || !form.location || !form.skills.length) {
       toast.error("Please fill in all required fields and add at least one skill");
@@ -96,32 +128,9 @@ export default function PostJobPage() {
     </div>
   );
 
-  const TagInput = ({ label, field, value, setValue, placeholder }) => (
-    <div>
-      <label className="block text-sm font-medium text-zinc-300 mb-2">{label}</label>
-      <div className="flex gap-2 mb-2">
-        <input
-          type="text" value={value} onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(field, value, setValue); } }}
-          placeholder={placeholder} className="input text-sm flex-1"
-        />
-        <button type="button" onClick={() => addTag(field, value, setValue)} className="btn-secondary text-sm px-3 py-2"><Plus size={15} /></button>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {form[field].map((item, i) => (
-          <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary-500/10 border border-primary-500/30 text-primary-400 text-sm">
-            {item}
-            <button onClick={() => removeTag(field, i)} type="button"><X size={11} /></button>
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen pt-20 pb-16 px-4">
       <div className="max-w-3xl mx-auto">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-1">{isEdit ? "Edit Job" : "Post a New Job"}</h1>
           <p className="text-zinc-400">Fill in the details to {isEdit ? "update" : "publish"} your job listing</p>
@@ -133,13 +142,9 @@ export default function PostJobPage() {
             <React.Fragment key={s}>
               <button
                 onClick={() => setStep(i)}
-                className={`flex items-center gap-2 text-sm font-medium transition-all ${
-                  i === step ? "text-primary-400" : i < step ? "text-white" : "text-zinc-600"
-                }`}
+                className={`flex items-center gap-2 text-sm font-medium transition-all ${i === step ? "text-primary-400" : i < step ? "text-white" : "text-zinc-600"}`}
               >
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs transition-all ${
-                  i === step ? "bg-primary-500 text-white" : i < step ? "bg-emerald-500 text-white" : "bg-surface-800 text-zinc-600"
-                }`}>
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs transition-all ${i === step ? "bg-primary-500 text-white" : i < step ? "bg-emerald-500 text-white" : "bg-surface-800 text-zinc-600"}`}>
                   {i < step ? "✓" : i + 1}
                 </span>
                 <span className="hidden sm:inline">{s}</span>
@@ -209,7 +214,15 @@ export default function PostJobPage() {
                 <label className="block text-sm font-medium text-zinc-300 mb-2">Job Description *</label>
                 <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Describe the role, team, and what the candidate will be doing..." rows={8} className="input resize-none" />
               </div>
-              <TagInput label="Required Skills *" field="skills" value={skillInput} setValue={setSkillInput} placeholder="e.g. React (press Enter)" />
+              <TagInput
+                label="Required Skills *"
+                field="skills"
+                value={skillInput}
+                setValue={setSkillInput}
+                form={form}
+                setForm={setForm}
+                placeholder="e.g. React (press Enter)"
+              />
               <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-2">Salary Range (₹/year)</label>
                 <div className="grid grid-cols-2 gap-3">
@@ -228,9 +241,9 @@ export default function PostJobPage() {
           {step === 2 && (
             <>
               <h2 className="font-bold text-white text-lg">Requirements & Perks</h2>
-              <TagInput label="Requirements" field="requirements" value={reqInput} setValue={setReqInput} placeholder="e.g. 3+ years of React experience" />
-              <TagInput label="Responsibilities" field="responsibilities" value={respInput} setValue={setRespInput} placeholder="e.g. Build scalable frontend apps" />
-              <TagInput label="Perks & Benefits" field="perks" value={perkInput} setValue={setPerkInput} placeholder="e.g. Health Insurance, WFH Allowance" />
+              <TagInput label="Requirements" field="requirements" value={reqInput} setValue={setReqInput} form={form} setForm={setForm} placeholder="e.g. 3+ years of React experience" />
+              <TagInput label="Responsibilities" field="responsibilities" value={respInput} setValue={setRespInput} form={form} setForm={setForm} placeholder="e.g. Build scalable frontend apps" />
+              <TagInput label="Perks & Benefits" field="perks" value={perkInput} setValue={setPerkInput} form={form} setForm={setForm} placeholder="e.g. Health Insurance, WFH Allowance" />
               <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-2">Status</label>
                 <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))} className="input">

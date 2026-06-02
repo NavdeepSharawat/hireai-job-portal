@@ -1,4 +1,5 @@
 const Application = require("../models/Application");
+const { sendApplicationEmail, sendStatusUpdateEmail } = require("../utils/email");
 const Job = require("../models/Job");
 
 // @desc    Apply to a job
@@ -38,6 +39,11 @@ exports.applyToJob = async (req, res) => {
     await Job.findByIdAndUpdate(req.params.jobId, { $inc: { applicationsCount: 1 } });
 
     await application.populate("job", "title companyName location jobType");
+    // Send email notification to recruiter
+const recruiter = await require("../models/User").findById(job.recruiter);
+if (recruiter?.email) {
+  sendApplicationEmail(recruiter.email, req.user.name, job.title);
+}
     res.status(201).json({ success: true, message: "Application submitted successfully! 🎉", application });
   } catch (err) {
     if (err.code === 11000) {
@@ -119,6 +125,12 @@ exports.updateApplicationStatus = async (req, res) => {
     if (rating) application.rating = rating;
 
     await application.save();
+    // Send email notification to applicant
+const applicant = await require("../models/User").findById(application.applicant);
+const job = await require("../models/Job").findById(application.job);
+if (applicant?.email) {
+  sendStatusUpdateEmail(applicant.email, applicant.name, job.title, status);
+}
     await application.populate("applicant", "name email profile");
 
     res.json({ success: true, message: "Application status updated!", application });

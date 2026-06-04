@@ -1,13 +1,14 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
 });
-
 // Send email when someone applies to a job
 exports.sendApplicationEmail = async (recruiterEmail, applicantName, jobTitle) => {
   try {
